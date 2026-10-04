@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mr. Rocha’s English Class: Diction and Tone</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    :root {
+        --bg-color: #f4f7f6;
+        --text-color: #333;
+        --container-bg: #fff;
+        --border-color: #ccc;
+        --primary: #2c3e50;
+        --secondary: #3498db;
+        --shiny-border: 2px solid #00d2ff;
+        --shiny-shadow: 0 0 10px #00d2ff, 0 0 5px #3a7bd5;
+        --correct: #2ecc71;
+        --incorrect: #e74c3c;
+        --explain-bg: #e2e8f0;
+    }
+    [data-theme="dark"] {
+        --bg-color: #121212;
+        --text-color: #f1f1f1;
+        --container-bg: #1e1e1e;
+        --border-color: #444;
+        --primary: #ecf0f1;
+        --secondary: #2980b9;
+        --explain-bg: #2d3748;
+    }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; transition: 0.3s; font-size: 16px; line-height: 1.6; }
+    #app { max-width: 900px; margin: auto; background: var(--container-bg); padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h1, h2, h3 { color: var(--primary); }
+    .shiny-input { border: var(--shiny-border); box-shadow: var(--shiny-shadow); border-radius: 5px; padding: 10px; font-size: 16px; background: var(--container-bg); color: var(--text-color); width: 100%; box-sizing: border-box; margin-bottom: 15px; }
+    .shiny-input:focus { outline: none; box-shadow: 0 0 15px #00d2ff; }
+    .shiny-input option { background: var(--container-bg); color: var(--text-color); }
+    
+    .section { display: none; }
+    .section.active { display: block; animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    
+    .btn { background: var(--secondary); color: #fff; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 5px 0; transition: 0.2s; }
+    .btn:hover { background: #1f618d; }
+    .btn:disabled { background: #7f8c8d; cursor: not-allowed; }
+    .nav-btns { display: flex; justify-content: space-between; margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px; }
+    
+    #progress-container { width: 100%; background: var(--border-color); border-radius: 10px; margin: 20px 0; height: 10px; overflow: hidden; }
+    #progress-bar { height: 100%; background: var(--secondary); width: 0%; transition: 0.4s; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    img, video, audio { max-width: 100%; border-radius: 8px; margin: 10px 0; display: block; }
+    .media-container { text-align: center; }
+    
+    /* Scrambled Image Grid (Increased by 30%) */
+    #scramble-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; width: 390px; height: 390px; margin: auto; border: 2px solid var(--text-color); }
+    .scramble-tile { width: 100%; height: 100%; background-image: url('Image2.jpg'); background-size: 390px 390px; cursor: pointer; }
+    
+    /* Drag & Drop words */
+    .word-bank { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; padding: 10px; min-height: 40px; border: 1px dashed var(--border-color); }
+    .word-tile { background: var(--secondary); color: #fff; padding: 5px 10px; border-radius: 5px; cursor: pointer; user-select: none; }
+    .sentence-drop { display: flex; flex-wrap: wrap; gap: 10px; min-height: 40px; border: var(--shiny-border); box-shadow: var(--shiny-shadow); padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+    
+    /* Explanations & Feedback */
+    .explanation-box { background: var(--explain-bg); color: var(--text-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); }
+    .feedback { font-weight: bold; margin-left: 10px; }
+    .correct-text { color: var(--correct); }
+    .incorrect-text { color: var(--incorrect); }
+    
+    /* Results Chart */
+    .chart-container { width: 100%; max-width: 600px; margin: auto; }
+    .recommendations li { margin-bottom: 10px; }
+
+    /* Conversation */
+    .conv-line { display: flex; margin-bottom: 10px; align-items: center; gap: 10px; }
+    .conv-line select { flex: 1; }
+
+    @media print {
+        body { background: #fff; color: #000; }
+        .top-bar, .nav-btns, .btn { display: none !important; }
+        .section { display: block !important; page-break-after: always; }
+        .shiny-input { border: 1px solid #000; box-shadow: none; color: #000; }
+        .explanation-box { border: 1px solid #000; background: #fff; color: #000; }
+    }
+</style>
+</head>
+<body>
+
+<div id="app">
+    <div class="top-bar">
+        <h2>Mr. Rocha’s English Class</h2>
+        <div>
+            <button class="btn" onclick="toggleTheme()">🌓 Dark/Light</button>
+            <button class="btn" onclick="showResults()" style="background:#8e44ad;">Submit / Finish</button>
+        </div>
+    </div>
+    
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    
+    <!-- Intro -->
+    <div class="section active" id="sec-0">
+        <h1>Welcome to Diction and Tone</h1>
+        <label>Name:</label>
+        <input type="text" id="userName" class="shiny-input" placeholder="Type your name...">
+        <label>Date:</label>
+        <input type="date" id="userDate" class="shiny-input">
+        
+        <div class="media-container">
+            <img src="Image1.jpg" alt="Intro Image" onerror="this.src='https://via.placeholder.com/600x300?text=Image1.jpg'">
+        </div>
+        
+        <div class="nav-btns">
+            <span></span>
+            <button class="btn" onclick="nav(1)">Next Activity ➔</button>
+        </div>
+    </div>
+
+    <!-- Activity 1 -->
+    <div class="section" id="sec-1">
+        <h2>Activity 1: Video Notes</h2>
+        <p>Watch the video. Take notes and tell Mr. Rocha what the video was about.</p>
+        <div class="media-container">
+            <video src="Video1.mp4" controls onerror="this.outerHTML='<p>[Video1.mp4 not found]</p>'"></video>
+        </div>
+        <textarea id="act1-notes" class="shiny-input" rows="5" placeholder="Type your notes here..."></textarea>
+        <button class="btn check-btn" onclick="checkAct1()">Check Answers</button>
+        <span id="act1-fb" class="feedback"></span>
+        <div class="nav-btns">
+            <button class="btn" onclick="nav(-1)">⬅ Previous</button>
+            <button class="btn" onclick="nav(1)">Next Activity ➔</button>
+        </div>
+    </div>
+
+    <!-- Activity 2 -->
+    <div class="section" id="sec-2">
+        <h2>Activity 2: Scrambled Image</h2>
+        <p>Order the 25 parts to form the complete Image2.</p>
+        <div style="display:flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+            <div>
+                <h4>Target Image</h4>
+                <img src="Image2.jpg" style="width:195px; height:195px;" onerror="this.src='https://via.placeholder.com/195?text=Image2.jpg'">
+            </div>
+            <div>
+                <div id="scramble-grid"></div>
+            </div>
+        </div>
+        <p>Timer: <span id="timer">0</span> seconds</p>
+        <button class="btn" onclick="initScramble()">Do Again</button>
+        <button class="btn check-btn" onclick="checkAct2()">Check Answers</button>
+        <span id="act2-fb" class="feedback"></span>
+        <div class="nav-btns">
+            <button class="btn" onclick="nav(-1)">⬅ Previous</button>
+            <button class="btn" onclick="nav(1)">Next Activity ➔</button>
+        </div>
+    </div>
+
+    <!-- Activity 3 -->
+    <div class="section" id="sec-3">
+        <h2>Activity 3: I See, I Think, I Wonder</h2>
+        <img src="Image2.jpg" alt="Image 2" onerror="this.src='https://via.placeholder.com/400x200?text=Image2.jpg'">
+        <label>I see:</label><textarea id="act3-see" class="shiny-input" rows="2"></textarea>
+        <label>I think:</label><textarea id="act3-think" class="shiny-input" rows="2"></textarea>
+        <label>I wonder:</label><textarea id="act3-wonder" class="shiny-input" rows="2"></textarea>
+        
+        <button class="btn check-btn" onclick="checkAct3()">Check Answers</button>
+        <span id="act3-fb" class="feedback"></span>
+        <div class="nav-btns">
+            <button class="btn" onclick="nav(-1)">⬅ Previous</button>
+            <button class="btn" onclick="nav(1)">Next Activity ➔</button>
+        </div>
+    </div>
+
+    <!-- Activity 4 -->
+    <div class="section" id="sec-4">
+        <h2>Activity 4: Combining Sentences (C1 Level)</h2>
+        <p>Combine sentences using conjunctive adverbs, semicolons, and conjunctions.</p>
+        <div class="explanation-box">
+            <strong>Explanation:</strong> Use semicolons to join closely related independent clauses. Conjunctive adverbs (however, therefore, moreover) require a semicolon before and a comma after. Coordinating conjunctions (and, but, or, so, yet) require a comma before them when joining independent clauses.<br>
+            <em>Example:</em> The tone was melancholic; however, the message was hopeful.
+        </div>
+        <div id="act4-container"></div>
+        <button class="btn check-btn" onclick="checkAct4()">Check Answers</button>
+        <div class="nav-btns">
+            <button class="btn" onclick="nav(-1)">⬅ Previous</button>
+            <button class="btn" onclick="nav(1)">Next Activity ➔</button>
+        </div>
+    </div>
+
+    <!-- Activity 5 -->
+    <div class="section" id="sec-5">
+        <h2>Activity 5: Conversation on Tone, Mood, Diction (C2 Level)</h2>
+        <p>Match Person B's responses to Person A's statements. Options will disappear once selected.</p>
+        <div id="act5-container"></div>
+        <button class="btn check-btn" onclick="checkAct5()">Check Answers</button>
+        <span id="act5-fb" class="feedback"></span>
+        <div class="nav-btns">
+            <button class="btn" onclick="nav(-1)">⬅ Previous</button>
+            <button class="btn" onclick="nav(1)">Next Activity ➔</button>
+        </div>
+    </div>
+
+    <!-- Activity 6 -->
+    <div class="section" id="sec-6">
+        <h2>Activity 6: Summary Writing</h2>
+        <img src="Image3.jpg" onerror="this.src='https://via.placeholder.com/400x200?text=Image3.jpg'">
+        <p>Write a summary of about 100 words based on the image.</p>
+        <textarea id="act6-text" class="shiny-input" rows="6"></textarea>
+        <p>Word Count: <span id="act6-count">0</span>/100</p>
+        <button class="btn check-btn" onclick="checkAct6()">Check Answers</button>
+        <span id="act6-fb" class="feedback"></span>
+        <div class="nav-btns">
+            <button class="btn" onclick="nav(-1)">⬅ Previous</button>
+            <button class="btn" onclick="nav(1)">Next Activity ➔</button>
+        </div>
+    </div>
+
+    <!-- Activity 7 -->
+    <div class="section" id="sec-7">
+        <h2>Activity 7: Scrambled Sentences</h2>
+        <p>Click words in the word bank to build the complex sentences. Click words in your answer to remove them.</p>
+        <div id="act7-container"></div>
+        <button class="btn check-btn" onclick="checkAct7()">Check Answers</button>
+        <div class="nav-btns">
+            <button class="btn" onclick="nav(-1)">⬅ Previous</button>
+            <button class="btn" onclick="nav(1)">Next Activity ➔</button>
+        </div>
+    </div>
+
+    <!-- Activity 8 -->
+    <div class="section" id="sec-8">
+        <h2>Activity 8: Reading Comprehension</h2>
+        <audio src="Audio1.mp3" controls onerror="this.outerHTML='<p>[Audio1.mp3 not found]</p>'"></audio>
+        <img src="Image4.jpg" onerror="this.src='https://via.placeholder.com/400x200?text=Image4.jpg'">
+        <div style="height: 200px; overflow-y: scroll; border: 1px solid var(--border-color); padding: 15px; margin-bottom: 15px; background: var(--container-bg); border-radius: 8px;">
+            <h3>The Bell Beneath the Mountain</h3>
+            <p>At dusk, when the western ridges burned like embers beneath a shroud of rain, Edrin reached the Gate of Veyruun. No mason’s mark adorned its basalt arch; only a sentence, cut deep into the stone: “Let the faithful enter, and the faithless remember.” He read it twice, though the second reading offered no comfort.</p>
+            <p>Beyond the gate, the road descended through a forest of silver-barked trees. Their leaves did not stir; nevertheless, a whisper travelled among them—slow, articulate, almost judicial. Edrin tightened his cloak and addressed the darkness: “I carry no crown, no relic, no claim.” The whisper answered... or perhaps the mountain merely exhaled.</p>
+            <p>He had been warned about this place: its paths remembered every traveller, and its stones repeated every lie. Yet necessity—sternest of counsellors—had driven him from the warm halls of his people. Behind him, the valley lay vulnerable; ahead, beneath leagues of rock, slept the bell whose voice could wake the ancient wardens.</p>
+            <p>The path ended at a chasm. Across it stood a narrow bridge, pale as a blade; below, black water revolved without sound. Edrin stepped forward. At once, the trees began to toll—not with bells, but with hollow knocks that counted his footfalls: one, two, three. The rhythm was neither hurried nor loud; its composure made it terrible.</p>
+            <p>Halfway across, a figure emerged from the opposite mist. It wore armour the colour of old ash, and where its face should have been there was only a smooth helm. “Name what you fear,” it commanded.</p>
+            <p>Edrin’s first impulse was to answer nobly: defeat, dishonour, the ruin of his house. Such words rose readily; they were banners, bright and useless. He looked down into the revolving dark and spoke the smaller truth. “I fear that I shall succeed—and become necessary to those I love.”</p>
+            <p>For a moment, nothing changed. Then the faceless guardian bowed; the bridge widened beneath Edrin’s boots, and a deep vibration passed through the mountain. Far below, something vast shifted in its sleep.</p>
+            <p>Edrin continued downward, neither triumphant nor reassured; behind him, the gate closed with the finality of a verdict.</p>
+        </div>
+        <div id="act8-container"></div>
+        <button class="btn check-btn" onclick="checkAct8()">Check Answers</button>
+        <div class="nav-btns">
+            <button class="btn" onclick="nav(-1)">⬅ Previous</button>
+            <button class="btn" onclick="nav(1)">Next Activity ➔</button>
+        </div>
+    </div>
+
+    <!-- Activity 9 -->
+    <div class="section" id="sec-9">
+        <h2>Activity 9: Prefixes and Suffixes (Grade 9)</h2>
+        <div class="explanation-box">
+            <strong>Explanations:</strong><br>
+            Prefixes: <em>un-</em> (not, e.g., unhappy), <em>re-</em> (again, e.g., rewrite), <em>pre-</em> (before, e.g., pregame).<br>
+            Suffixes: <em>-ful</em> (full of, e.g., joyful), <em>-less</em> (without, e.g., hopeless), <em>-ly</em> (how something is done, e.g., quickly), <em>-tion</em> (state/action, e.g., completion).
+        </div>
+        <div id="act9-container"></div>
+        <button class="btn check-btn" onclick="checkAct9()">Check Answers</button>
+        <div class="nav-btns">
+            <button class="btn" onclick="nav(-1)">⬅ Previous</button>
+            <button class="btn" onclick="nav(1)">Next Activity ➔</button>
+        </div>
+    </div>
+
+    <!-- Activity 10 -->
+    <div class="section" id="sec-10">
+        <h2>Activity 10: Informative Text Completion (C1)</h2>
+        <p>Select the correct missing sentences from the dropdowns to complete the text.</p>
+        <div id="act10-text" style="line-height: 2.5;">
+            Understanding the subtle differences between mood, tone, and diction is crucial for advanced literary analysis. <select id="act10-drop1" class="shiny-input" style="width:auto; display:inline-block; margin-bottom: 0;"></select> While tone refers to the author's attitude towards the subject, mood is the emotional atmosphere experienced by the reader. <select id="act10-drop2" class="shiny-input" style="width:auto; display:inline-block; margin-bottom: 0;"></select> Diction, the meticulous selection of words, serves as the foundation for both. <select id="act10-drop3" class="shiny-input" style="width:auto; display:inline-block; margin-bottom: 0;"></select> For instance, substituting the word 'sad' with 'desolate' drastically alters the emotional weight of a passage. <select id="act10-drop4" class="shiny-input" style="width:auto; display:inline-block; margin-bottom: 0;"></select> Therefore, analyzing a writer's lexicon allows us to decode their stylistic intentions. <select id="act10-drop5" class="shiny-input" style="width:auto; display:inline-block; margin-bottom: 0;"></select>
+        </div>
+        <button class="btn check-btn" style="margin-top:20px;" onclick="checkAct10()">Check Answers</button>
+        <span id="act10-fb" class="feedback"></span>
+        <div class="nav-btns">
+            <button class="btn" onclick="nav(-1)">⬅ Previous</button>
+            <button class="btn" onclick="nav(1)">Next Activity ➔</button>
+        </div>
+    </div>
+
+    <!-- Activity 11 -->
+    <div class="section" id="sec-11">
+        <h2>Activity 11: Final Writing Reflection</h2>
+        <p>Write what you have learned about mood, tone, and diction. Check for spelling, punctuation, grammar, and capitalization.</p>
+        <textarea id="act11-text" class="shiny-input" rows="8"></textarea>
+        <button class="btn" onclick="alert('Sample C1 Text:\n\nThrough these exercises, I have deduced that diction acts as the stylistic bedrock of a text, heavily influencing both tone and mood. While tone projects the author’s inherent attitude—be it cynical, jubilant, or foreboding—mood encompasses the atmospheric reverberations felt by the reader. Precise lexical choices (diction) are pivotal; they dictate whether a passage evokes nuanced dread or serene comfort, underscoring the profound interconnectedness of these three literary elements.')">Show Sample Text</button>
+        <br><br>
+        <button class="btn check-btn" onclick="checkAct11()">Check Answers</button>
+        <span id="act11-fb" class="feedback"></span>
+        <div class="nav-btns">
+            <button class="btn" onclick="nav(-1)">⬅ Previous</button>
+            <button class="btn" onclick="showResults()" style="background:#8e44ad;">Submit & View Results</button>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="section" id="sec-12">
+        <h2>Your Results & Feedback</h2>
+        <button class="btn" onclick="window.print()">🖨️ Print Results</button>
+        <div id="results-summary" style="font-size: 1.2em; font-weight: bold; margin: 20px 0;"></div>
+        
+        <div class="chart-container">
+            <canvas id="resultsChart"></canvas>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <h3>Specific Recommendations</h3>
+            <ul class="recommendations" id="recommendations-list"></ul>
+        </div>
+
+        <div class="nav-btns">
+            <button class="btn" onclick="nav(-1)">⬅ Go Back to Worksheet</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- Global State & Setup ---
+    let currentSection = 0;
+    const totalSections = 13;
+    let scores = Array(11).fill(0); 
+    let maxScores = [1, 1, 3, 12, 14, 1, 12, 6, 12, 5, 1]; 
+
+    function toggleTheme() {
+        document.body.dataset.theme = document.body.dataset.theme === "dark" ? "light" : "dark";
+    }
+
+    function nav(step) {
+        document.getElementById(`sec-${currentSection}`).classList.remove('active');
+        currentSection += step;
+        if(currentSection < 0) currentSection = 0;
+        if(currentSection >= totalSections) currentSection = totalSections - 1;
+        document.getElementById(`sec-${currentSection}`).classList.add('active');
+        updateProgress();
+        window.scrollTo(0, 0);
+    }
+
+    function updateProgress() {
+        const p = (currentSection / (totalSections - 1)) * 100;
+        document.getElementById('progress-bar').style.width = p + '%';
+    }
+
+    function lockInputs(sectionId) {
+        const sec = document.getElementById(sectionId);
+        const inputs = sec.querySelectorAll('input, textarea, select, button.word-tile');
+        inputs.forEach(el => el.disabled = true);
+        const checkBtn = sec.querySelector('.check-btn');
+        if(checkBtn) checkBtn.disabled = true;
+    }
+
+    // --- Activity Data & Logic ---
+
+    // Act 1
+    function checkAct1() {
+        if(document.getElementById('act1-notes').value.trim().length > 10) scores[0] = 1;
+        document.getElementById('act1-fb').innerHTML = "<span class='correct-text'>Notes submitted. ✓</span>";
+        lockInputs('sec-1');
+    }
+
+    // Act 2 (Scramble - Now Scaled up 30% to 390px total)
+    let scrambleTimer = 0; let timerInterval;
+    function initScramble() {
+        const grid = document.getElementById('scramble-grid');
+        grid.innerHTML = '';
+        let positions = Array.from({length:25}, (_,i)=>i).sort(()=>Math.random()-0.5);
+        positions.forEach((pos, i) => {
+            // Percentages remain the same regardless of grid size
+            let x = (pos % 5) * 25; // using 25% increments so it maps 0, 25, 50, 75, 100
+            let y = Math.floor(pos / 5) * 25;
+            let tile = document.createElement('div');
+            tile.className = 'scramble-tile';
+            tile.style.backgroundPosition = `${x}% ${y}%`;
+            tile.dataset.correctPos = pos;
+            tile.dataset.currentPos = i;
+            tile.onclick = () => swapTiles(tile);
+            grid.appendChild(tile);
+        });
+        clearInterval(timerInterval); scrambleTimer = 0;
+        timerInterval = setInterval(() => { scrambleTimer++; document.getElementById('timer').innerText = scrambleTimer; }, 1000);
+    }
+    let selectedTile = null;
+    function swapTiles(tile) {
+        if(!selectedTile) { selectedTile = tile; tile.style.border = '2px solid red'; }
+        else {
+            let tempBg = selectedTile.style.backgroundPosition;
+            let tempCp = selectedTile.dataset.correctPos;
+            selectedTile.style.backgroundPosition = tile.style.backgroundPosition;
+            selectedTile.dataset.correctPos = tile.dataset.correctPos;
+            tile.style.backgroundPosition = tempBg;
+            tile.dataset.correctPos = tempCp;
+            selectedTile.style.border = 'none';
+            selectedTile = null;
+        }
+    }
+    function checkAct2() {
+        clearInterval(timerInterval);
+        let correct = 0;
+        document.querySelectorAll('.scramble-tile').forEach((t, i) => {
+            if(parseInt(t.dataset.correctPos) === i) correct++;
+        });
+        scores[1] = correct === 25 ? 1 : 0;
+        document.getElementById('act2-fb').innerHTML = `<span class='${correct===25?'correct-text':'incorrect-text'}'>${correct}/25 pieces correct.</span>`;
+        lockInputs('sec-2');
+    }
+    initScramble();
+
+    // Act 3
+    function checkAct3() {
+        let sc = 0;
+        if(document.getElementById('act3-see').value) sc++;
+        if(document.getElementById('act3-think').value) sc++;
+        if(document.getElementById('act3-wonder').value) sc++;
+        scores[2] = sc;
+        document.getElementById('act3-fb').innerHTML = "<span class='correct-text'>Routine submitted. ✓</span>";
+        lockInputs('sec-3');
+    }
+
+    // Act 4
+    const act4Data = [
+        {q: "The author's diction is highly formal; ____, it creates a distant tone.", opts: ["moreover", "but", "so"], a: "moreover"},
+        {q: "The mood was ominous, ____ the protagonist felt unexpectedly calm.", opts: ["yet", "because", "therefore"], a: "yet"},
+        {q: "He used harsh consonants; ____, the tone felt aggressive.", opts: ["thus", "and", "or"], a: "thus"},
+        {q: "The setting was beautiful, ____ the diction revealed underlying decay.", opts: ["but", "consequently", "so"], a: "but"},
+        {q: "She felt isolated; ____, the tone of her letter was pleading.", opts: ["consequently", "or", "yet"], a: "consequently"},
+        {q: "The writer wanted to evoke fear, ____ he used words like 'shadow' and 'creeping'.", opts: ["so", "however", "although"], a: "so"},
+        {q: "The imagery was vibrant; ____, it failed to lift the gloomy mood.", opts: ["however", "and", "because"], a: "however"},
+        {q: "They must adjust the diction, ____ the intended tone will be lost.", opts: ["or", "furthermore", "thus"], a: "or"},
+        {q: "The diction was conversational; ____, the audience felt engaged.", opts: ["therefore", "but", "yet"], a: "therefore"},
+        {q: "He spoke softly, ____ his words carried a threatening tone.", opts: ["and", "furthermore", "because"], a: "and"},
+        {q: "The mood was joyous; ____, everyone was smiling.", opts: ["indeed", "but", "yet"], a: "indeed"},
+        {q: "We analyzed the syntax ____ we examined the diction.", opts: ["and", "however", "thus"], a: "and"}
+    ];
+    function renderAct4() {
+        let html = '';
+        act4Data.forEach((d, i) => {
+            html += `<p>${i+1}. ${d.q.replace('____', `<select id="act4-q${i}" class="shiny-input" style="width:auto; display:inline-block; padding:5px; margin-bottom:0;"><option value=""></option>${d.opts.map(o=>`<option value="${o}">${o}</option>`).join('')}</select>`)} <span id="act4-fb${i}"></span></p>`;
+        });
+        document.getElementById('act4-container').innerHTML = html;
+    }
+    function checkAct4() {
+        let sc = 0;
+        act4Data.forEach((d, i) => {
+            let val = document.getElementById(`act4-q${i}`).value;
+            let fb = document.getElementById(`act4-fb${i}`);
+            if(val === d.a) { sc++; fb.innerHTML = '✅'; } else { fb.innerHTML = `❌ (${d.a})`; }
+        });
+        scores[3] = sc; lockInputs('sec-4');
+    }
+    renderAct4();
+
+    // Act 5
+    const act5Data = [
+        {a: "The tone of this piece is quite melancholy.", b: "Absolutely. The author's use of 'desolate' sets a sad mood."},
+        {a: "Notice how the diction shifts in paragraph two.", b: "Yes, it goes from colloquial to highly formal."},
+        {a: "The mood here feels extremely tense.", b: "I agree, the short, choppy syntax builds suspense."},
+        {a: "What do you make of the word 'slithered'?", b: "It introduces a sinister tone instantly."},
+        {a: "The author uses a lot of sensory details.", b: "Those details really immerse the reader in the atmosphere."},
+        {a: "The ending feels somewhat unresolved.", b: "That ambiguity contributes to the uneasy mood."},
+        {a: "Her tone seems mocking, doesn't it?", b: "Definitely, especially with that sarcastic rhetorical question."},
+        {a: "I love the jubilant mood in the opening.", b: "It's created by words like 'radiant' and 'soaring'."},
+        {a: "The diction is archaic and complex.", b: "That elevates the tone, making it sound authoritative."},
+        {a: "Why repeat the word 'never'?", b: "It creates a tone of absolute despair and finality."},
+        {a: "The mood shifted when the rain started.", b: "Classic pathetic fallacy to introduce gloom."},
+        {a: "His tone towards the antagonist is sympathetic.", b: "Surprisingly so; it complicates the moral landscape."},
+        {a: "The clinical diction strips away emotion.", b: "Exactly, leaving an objective, detached tone."},
+        {a: "This dialogue feels incredibly authentic.", b: "Because the informal diction matches the characters perfectly."}
+    ];
+    let bOptions = act5Data.map(d=>d.b).sort(()=>Math.random()-0.5);
+    function renderAct5() {
+        let html = '';
+        act5Data.forEach((d, i) => {
+            html += `<div class="conv-line"><b>A:</b> ${d.a} <select id="act5-q${i}" class="shiny-input act5-sel" onchange="updateAct5Drops()" style="padding:8px; margin-bottom:0;"><option value=""></option>${bOptions.map(o=>`<option value="${o}">${o}</option>`).join('')}</select><span id="act5-fb${i}"></span></div>`;
+        });
+        document.getElementById('act5-container').innerHTML = html;
+    }
+    function updateAct5Drops() {
+        let selected = Array.from(document.querySelectorAll('.act5-sel')).map(s=>s.value).filter(v=>v);
+        document.querySelectorAll('.act5-sel').forEach(sel => {
+            Array.from(sel.options).forEach(opt => {
+                if(opt.value && selected.includes(opt.value) && sel.value !== opt.value) opt.disabled = true;
+                else opt.disabled = false;
+            });
+        });
+    }
+    function checkAct5() {
+        let sc = 0;
+        act5Data.forEach((d, i) => {
+            let val = document.getElementById(`act5-q${i}`).value;
+            let fb = document.getElementById(`act5-fb${i}`);
+            if(val === d.b) { sc++; fb.innerHTML = '✅'; } else { fb.innerHTML = '❌'; }
+        });
+        scores[4] = sc; lockInputs('sec-5');
+    }
+    renderAct5();
+
+    // Act 6
+    document.getElementById('act6-text').addEventListener('input', function() {
+        document.getElementById('act6-count').innerText = this.value.trim().split(/\s+/).filter(w=>w).length;
+    });
+    function checkAct6() {
+        let words = document.getElementById('act6-text').value.trim().split(/\s+/).filter(w=>w).length;
+        scores[5] = words >= 80 ? 1 : 0;
+        document.getElementById('act6-fb').innerHTML = "<span class='correct-text'>Summary checked. ✓</span>";
+        lockInputs('sec-6');
+    }
+
+    // Act 7
+    const act7Sentences = [
+        "The somber tone reflects the author's dark mood.",
+        "Diction encompasses the specific word choices writers utilize.",
+        "An eerie mood is established through unsettling descriptions.",
+        "The playful tone juxtaposes the serious subject matter.",
+        "Formal diction is appropriate for academic research papers.",
+        "Tone indicates the writer's attitude toward the audience.",
+        "Mood is the emotional response elicited in the reader.",
+        "Sarcastic tone relies heavily on contextual situational irony.",
+        "Vivid diction paints a clear picture in minds.",
+        "The melancholy mood persisted throughout the entire novel.",
+        "Aggressive tone can alienate readers if overused constantly.",
+        "Careful diction elevates the overall quality of writing."
+    ];
+    function speak(text) {
+        let u = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(u);
+    }
+    function renderAct7() {
+        let html = '';
+        act7Sentences.forEach((s, i) => {
+            let words = s.split(' ').sort(()=>Math.random()-0.5);
+            html += `<div style="margin-bottom:20px;">
+                <button class="btn" style="background:#f39c12;" onclick="speak('${s.replace(/'/g, "\\'")}')">🔊 Listen</button>
+                <div class="word-bank" id="a7-bank-${i}">${words.map((w, j)=>`<span class="word-tile" id="a7-w-${i}-${j}" onclick="moveWord7(this, ${i})">${w}</span>`).join('')}</div>
+                <div class="sentence-drop" id="a7-ans-${i}"></div>
+                <span id="act7-fb${i}"></span>
+            </div>`;
+        });
+        document.getElementById('act7-container').innerHTML = html;
+    }
+    function moveWord7(el, idx) {
+        if(el.disabled) return;
+        let bank = document.getElementById(`a7-bank-${idx}`);
+        let ans = document.getElementById(`a7-ans-${idx}`);
+        if(el.parentElement === bank) ans.appendChild(el);
+        else bank.appendChild(el);
+    }
+    function checkAct7() {
+        let sc = 0;
+        act7Sentences.forEach((s, i) => {
+            let ansStr = Array.from(document.getElementById(`a7-ans-${i}`).children).map(c=>c.innerText).join(' ');
+            let fb = document.getElementById(`act7-fb${i}`);
+            if(ansStr === s) { sc++; fb.innerHTML = '✅'; } else { fb.innerHTML = '❌ Correct: ' + s; }
+        });
+        scores[6] = sc; lockInputs('sec-7');
+    }
+    renderAct7();
+
+    // Act 8
+    const act8Data = [
+        {q: "1. Which description best identifies the passage’s predominant tone?", opts: ["A. Sardonic and dismissive", "B. Solemn and foreboding", "C. Jubilant and celebratory", "D. Casual and conversational"], a: 1},
+        {q: "2. What mood is primarily created by the silent forest and the noiseless, revolving water?", opts: ["A. Buoyant anticipation", "B. Domestic comfort", "C. Uneasy suspense", "D. Righteous anger"], a: 2},
+        {q: "3. The diction in “necessity—sternest of counsellors—had driven him” chiefly presents necessity as:", opts: ["A. An amusing companion", "B. A merciless authority", "C. A deceptive stranger", "D. A benevolent teacher"], a: 1},
+        {q: "4. How does the semicolon in the final sentence affect the tone?", opts: ["A. It joins Edrin’s unresolved state to the gate’s grim closure.", "B. It introduces a humorous exception to the preceding idea.", "C. It signals that the narrator is changing the subject entirely.", "D. It makes the ending seem hurried and informal."], a: 0},
+        {q: "5. Which phrase most strongly contributes to an atmosphere of measured dread?", opts: ["A. “the warm halls of his people”", "B. “banners, bright and useless”", "C. “the trees began to toll”", "D. “the valley lay vulnerable”"], a: 2},
+        {q: "6. Edrin’s admission that he fears becoming “necessary” introduces which tonal complexity?", opts: ["A. Comic relief through exaggeration", "B. Nostalgia for a peaceful childhood", "C. Arrogant certainty about his destiny", "D. Moral unease beneath apparent courage"], a: 3}
+    ];
+    function renderAct8() {
+        let html = '';
+        act8Data.forEach((d, i) => {
+            html += `<div style="margin-bottom:15px;"><p><strong>${d.q}</strong></p>`;
+            d.opts.forEach((o, j) => {
+                html += `<label style="display:block;"><input type="radio" name="act8-q${i}" value="${j}"> ${o}</label>`;
+            });
+            html += `<span id="act8-fb${i}"></span></div>`;
+        });
+        document.getElementById('act8-container').innerHTML = html;
+    }
+    function checkAct8() {
+        let sc = 0;
+        act8Data.forEach((d, i) => {
+            let sel = document.querySelector(`input[name="act8-q${i}"]:checked`);
+            let fb = document.getElementById(`act8-fb${i}`);
+            if(sel && parseInt(sel.value) === d.a) { sc++; fb.innerHTML = '✅'; } 
+            else { fb.innerHTML = `❌ (Correct: ${d.opts[d.a].charAt(0)})`; }
+        });
+        scores[7] = sc; lockInputs('sec-8');
+    }
+    renderAct8();
+
+    // Act 9
+    const act9Data = [
+        {q: "Add a prefix to 'happy' to mean 'not happy': ____happy", a: "un"},
+        {q: "Add a suffix to 'care' to mean 'without care': care____", a: "less"},
+        {q: "Prefix for 'write' meaning 'write again': ____write", a: "re"},
+        {q: "Suffix for 'joy' meaning 'full of joy': joy____", a: "ful"},
+        {q: "Suffix for 'quick' meaning 'how it is done': quick____", a: "ly"},
+        {q: "Prefix for 'view' meaning 'view before': ____view", a: "pre"},
+        {q: "Prefix for 'understand' meaning 'understand wrongly': ____understand", a: "mis"},
+        {q: "Suffix for 'educate' meaning 'state of': educa____", a: "tion"},
+        {q: "Prefix for 'possible' meaning 'not possible': ____possible", a: "im"},
+        {q: "Suffix for 'danger' meaning 'full of': danger____", a: "ous"},
+        {q: "Suffix for 'argue' meaning 'action/process': argu____", a: "ment"},
+        {q: "Prefix for 'behave' meaning 'behave badly': ____behave", a: "mis"}
+    ];
+    function renderAct9() {
+        let html = '';
+        act9Data.forEach((d, i) => {
+            html += `<p>${i+1}. ${d.q.replace('____', `<input type="text" id="act9-q${i}" class="shiny-input" style="width:100px; display:inline-block; padding: 5px; margin-bottom: 0;">`)} <span id="act9-fb${i}"></span></p>`;
+        });
+        document.getElementById('act9-container').innerHTML = html;
+    }
+    function checkAct9() {
+        let sc = 0;
+        act9Data.forEach((d, i) => {
+            let val = document.getElementById(`act9-q${i}`).value.toLowerCase().trim();
+            let fb = document.getElementById(`act9-fb${i}`);
+            if(val === d.a) { sc++; fb.innerHTML = '✅'; } else { fb.innerHTML = `❌ (${d.a})`; }
+        });
+        scores[8] = sc; lockInputs('sec-9');
+    }
+    renderAct9();
+
+    // Act 10
+    const act10Sentences = [
+        "These terms, though related, serve distinct functions.",
+        "This emotional setting is heavily crafted by the writer's language.",
+        "Without precise vocabulary, neither atmosphere nor attitude can be established.",
+        "Such a choice injects an undeniable sense of despair.",
+        "Ultimately, mastery of these elements separates adequate writing from profound literature."
+    ];
+    let a10Opts = [...act10Sentences].sort(()=>Math.random()-0.5);
+    function renderAct10() {
+        for(let i=1; i<=5; i++){
+            let sel = document.getElementById(`act10-drop${i}`);
+            sel.innerHTML = `<option value=""></option>` + a10Opts.map(s=>`<option value="${s}">${s}</option>`).join('');
+        }
+    }
+    function checkAct10() {
+        let sc = 0;
+        for(let i=1; i<=5; i++){
+            let val = document.getElementById(`act10-drop${i}`).value;
+            if(val === act10Sentences[i-1]) sc++;
+        }
+        scores[9] = sc;
+        document.getElementById('act10-fb').innerHTML = sc===5 ? "<span class='correct-text'>All correct! ✅</span>" : `<span class='incorrect-text'>You got ${sc}/5 correct.</span>`;
+        lockInputs('sec-10');
+    }
+    renderAct10();
+
+    // Act 11
+    function checkAct11() {
+        if(document.getElementById('act11-text').value.trim().length > 20) scores[10] = 1;
+        document.getElementById('act11-fb').innerHTML = "<span class='correct-text'>Reflection submitted. ✓</span>";
+        lockInputs('sec-11');
+    }
+
+    // Results
+    function showResults() {
+        nav(totalSections); 
+        let totalScore = scores.reduce((a,b)=>a+b, 0);
+        let maxTotal = maxScores.reduce((a,b)=>a+b, 0);
+        let pct = (totalScore / maxTotal) * 100;
+        let name = document.getElementById('userName').value || 'Student';
+        
+        document.getElementById('results-summary').innerHTML = `${name}, you scored ${totalScore} out of ${maxTotal} (${pct.toFixed(1)}%)`;
+
+        // Chart
+        const ctx = document.getElementById('resultsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['A1 (Video)', 'A2 (Scramble)', 'A3 (Think)', 'A4 (Combine)', 'A5 (Conv)', 'A6 (Summary)', 'A7 (Sentences)', 'A8 (Reading)', 'A9 (Affixes)', 'A10 (Text)', 'A11 (Reflect)'],
+                datasets: [{
+                    label: 'Points Earned',
+                    data: scores,
+                    backgroundColor: ['#e74c3c', '#8e44ad', '#3498db', '#e67e22', '#2ecc71', '#f1c40f', '#1abc9c', '#34495e', '#d35400', '#9b59b6', '#c0392b'],
+                    borderColor: '#2c3e50',
+                    borderWidth: 1
+                }]
+            },
+            options: { scales: { y: { beginAtZero: true, max: 14 } } }
+        });
+
+        // Recommendations
+        let recs = [];
+        if(pct >= 90) {
+            recs = [
+                "1. Excellent grasp of tone and mood. Try reading advanced literary criticism to challenge yourself.",
+                "2. Your diction is superb; consider writing creative pieces experimenting with archaic vocabulary.",
+                "3. You combined sentences flawlessly (C1). Practice C2 level syntax using inverted structures.",
+                "4. Reading comprehension is sharp. Analyze obscure texts like 19th-century poetry next.",
+                "5. Prefixes and suffixes are well understood. Explore etymology and Latin roots.",
+                "6. Your summarization skills are concise. Try writing micro-fiction (under 50 words).",
+                "7. Conversation tone matching was perfect. Practice writing dialogue for contrasting characters.",
+                "8. Keep maintaining this high standard by actively annotating texts you read for pleasure."
+            ];
+        } else if(pct >= 70) {
+            recs = [
+                "1. Good overall understanding, but review the subtle differences between mood and tone.",
+                "2. Practice combining sentences using conjunctive adverbs more frequently.",
+                "3. Read more descriptive C1 texts to expand your vocabulary for diction.",
+                "4. In reading comprehension, pay closer attention to how punctuation (like semicolons) affects tone.",
+                "5. Review specific suffixes (-tion, -ous) to improve word transformation skills.",
+                "6. Ensure your summaries capture the main atmospheric details without adding personal opinion.",
+                "7. Revisit the scrambled sentences to internalize complex sentence structures.",
+                "8. Watch videos on literary devices to strengthen your analytical foundation."
+            ];
+        } else {
+            recs = [
+                "1. Review the fundamental definitions of Mood, Tone, and Diction.",
+                "2. Practice basic sentence combining with 'and, but, or' before moving to semicolons.",
+                "3. Re-read 'The Bell Beneath the Mountain' slowly, noting down unfamiliar words.",
+                "4. Memorize the list of common prefixes and suffixes provided in Activity 9.",
+                "5. Practice identifying tone in everyday conversations or movies.",
+                "6. Work on shorter sentence construction to ensure grammatical accuracy before attempting complex ones.",
+                "7. Use a dictionary when completing writing tasks to improve your diction.",
+                "8. Don't rush! Take your time with the 'I see, I think, I wonder' routine to build analytical thinking."
+            ];
+        }
+        document.getElementById('recommendations-list').innerHTML = recs.map(r=>`<li>${r}</li>`).join('');
+    }
+</script>
+</body>
+</html>
